@@ -74,7 +74,12 @@ class Claim(Doc):
     fields = ['user_id', 'envelope_id', 'cent']
 
     def record(self, cli):
-        cli.append('envelope:claimed:%d' % self.user_id, json.dumps(self.dic))
+        cli.lpush('envelope:claimed:%d' % self.user_id, json.dumps(self.dic))
+
+    @staticmethod
+    def query(cli, user_id, start, limit):
+        docs = cli.lrange('envelope:claimed:%s' % user_id, start, start+limit)
+        return [Claim(**json.loads(d)) for d in docs]
 
 
 class Wallet(Doc):

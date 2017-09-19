@@ -52,7 +52,10 @@ class Santa:
             raise SimpleException('Already claimed.')
 
         #: check secret
-        if secret.encode('utf8') != Envelope.get(client, env_id).secret:
+        env = Envelope.get(client, env_id)
+        if not env:
+            raise SimpleException('No such envelop')
+        if secret != env.secret:
             raise SimpleException('Invalid secret')
 
         if not Envelope.claim(client, env_id):
@@ -72,7 +75,9 @@ class Santa:
         _ = sub.get_message(timeout=request_timeout)
         res = sub.get_message(timeout=request_timeout)
         try:
-            return json.loads(res['data'])
+            claim_doc = json.loads(res['data'])
+            claim.cent = int(claim_doc['cent'])
+            return claim
         except (JSONDecodeError, TypeError):
             raise SimpleException("failed to get result")
         finally:
@@ -155,5 +160,5 @@ class Santa:
                 claim_dic = json.loads(msg['data'])
                 claim = Claim(**claim_dic)
                 Santa.do_claim(claim)
-            except (JSONDecodeError, TypeError):
+            except:
                 logging.error("failed to consume %s", msg)

@@ -8,8 +8,12 @@ class Doc:
     fields, dic = [], {}
 
     def __init__(self, **kwargs):
+        # import ipdb; ipdb.set_trace()
         for f in self.__class__.fields:
-            setattr(self, f, kwargs[f])
+            v = kwargs[f]
+            if isinstance(v, bytes):
+                v = v.decode('utf8')
+            setattr(self, f, v)
         self.id = kwargs.get('id')
 
     @property
@@ -19,6 +23,8 @@ class Doc:
     @classmethod
     def get(cls, cli, doc_id):
         doc = cli.hgetall(cls._get_key(doc_id))
+        if not doc:
+            return None
         dic = {
             k.decode('utf8'): v for k, v in doc.items()
             }
@@ -72,11 +78,11 @@ class Claim(Doc):
 
 
 class Wallet(Doc):
-    fields = ['user_id', 'cent']
+    fields = ['cent']
 
     @classmethod
     def incr(cls, client, user_id, delta):
-        client.incrby('user:wallet:%d' % user_id, delta)
+        client.hincrby(cls._get_key(user_id), 'cent', delta)
 
 
 if __name__ == '__main__':

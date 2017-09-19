@@ -23,12 +23,12 @@ class SimpleException(Exception):
 
 class Santa:
     @staticmethod
-    def gen_secret():
+    def gen_secret(num=8):
         """
         生成口令
         """
         literal = '123456789' + ''.join([x for x in string.ascii_letters if x not in ('l', 'O')])
-        chars = [random.choice(literal) for _ in range(8)]
+        chars = [random.choice(literal) for _ in range(num)]
         return ''.join(chars)
 
     @staticmethod
@@ -129,11 +129,11 @@ class Santa:
         红包过期退款
         """
         #: 逐出或过期时通知
-        client.config_set('config set notify-keyspace-events', 'Kxe')
+        client.config_set('notify-keyspace-events', 'Kxe')
         sub = client.pubsub()
         sub.psubscribe('__keyspace*__:envelope:expire:*')
         for msg in sub.listen():
-            if msg['type'] == 'subscribe':
+            if msg['type'] == 'psubscribe':
                 continue
             envelope_id = msg['key'].split(':')[-1]
             envelope = client.hgetall('envelope:%d' % envelope_id)

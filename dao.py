@@ -1,7 +1,10 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import time
 import json
 
-data_ttl = 60  # seconds
+data_ttl = 24 * 60  # seconds
 
 
 class Doc:
@@ -78,7 +81,7 @@ class Claim(Doc):
 
     @staticmethod
     def query(cli, user_id, start, limit):
-        docs = cli.lrange('envelope:claimed:%s' % user_id, start, start+limit)
+        docs = cli.lrange('envelope:claimed:%s' % user_id, start, start + limit)
         return [Claim(**json.loads(d)) for d in docs]
 
 
@@ -86,15 +89,5 @@ class Wallet(Doc):
     fields = ['cent']
 
     @classmethod
-    def incr(cls, client, user_id, delta):
-        client.hincrby(cls._get_key(user_id), 'cent', delta)
-
-
-if __name__ == '__main__':
-    import redis
-
-    client = redis.StrictRedis(host='localhost', port=6379, db=0)
-    env = Envelope(total_cent=343, total_num=5, remain_cent=38, remain_num=1, secret='8jW39af')
-    env.save(client)
-    env2 = Envelope.get(client, env.id)
-    assert env.id == env2.id
+    def incr(cls, cli, user_id, delta):
+        cli.hincrby(cls._get_key(user_id), 'cent', delta)

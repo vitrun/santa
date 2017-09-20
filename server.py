@@ -1,3 +1,6 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import tornado.ioloop
 import tornado.web
 
@@ -6,6 +9,9 @@ from dao import Wallet, Claim
 
 
 class BaseHandler(tornado.web.RequestHandler):
+    def data_received(self, chunk):
+        pass
+
     def done(self, data=None, status=0, msg=''):
         self.write({
             'status': status,
@@ -27,11 +33,12 @@ class EnvelopeHandler(BaseHandler):
             user_id = int(self.get_argument('user_id'))
             cent = int(float(self.get_argument('money')) * 100)
             num = int(self.get_argument('num'))
+            #: TODO. more argument check
             if num > cent:
                 self.done(msg='num too large')
                 return
             envelope = Santa.create_envelope(user_id, cent, num)
-            self.write(envelope.dic)
+            self.done(envelope.dic)
         except Exception as e:
             self.done(msg=str(e))
 
@@ -55,6 +62,8 @@ class ClaimListHandler(BaseHandler):
         try:
             start = int(self.get_argument('start'))
             limit = int(self.get_argument('limit', 12))
+            #: TODO. more argument check
+
             claims = Claim.query(client, user_id, start, limit)
             self.done(data=[c.dic for c in claims])
         except Exception as e:
@@ -71,6 +80,7 @@ def make_app():
 
 
 if __name__ == '__main__':
-    app = make_app()
-    app.listen(8080)
+    app, port = make_app(), 8080
+    app.listen(port)
+    print('fire in the hole from ', port)
     tornado.ioloop.IOLoop.current().start()

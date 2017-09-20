@@ -86,7 +86,7 @@ class Santa:
     @staticmethod
     def publish(cli, claim):
         claim_channel = 'envelope:claim:queue'
-        logging.debug("pubishing to %s: %s", claim_channel, claim.dic)
+        logging.debug("publishing to %s: %s", claim_channel, claim.dic)
         cli.publish(claim_channel, json.dumps(claim.dic))
 
     @staticmethod
